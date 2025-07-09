@@ -1,0 +1,219 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+jobs:
+  test:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+    
+    - name: Test import functionality
+      run: |
+        python -c "import customtkinter; print('CustomTkinter imported successfully')"
+        python -c "import pyautogui; print('PyAutoGUI imported successfully')"
+        python -c "import pynput; print('Pynput imported successfully')"
+        python -c "print('All dependencies imported successfully')"
+
+  build:
+    needs: test
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build executable
+      run: |
+        python build.py
+    
+    - name: Test executable exists
+      run: |
+        if (Test-Path "dist/LazyAF_4.20.exe") {
+          Write-Host "✅ Executable built successfully"
+          $size = (Get-Item "dist/LazyAF_4.20.exe").Length / 1MB
+          Write-Host "📦 Size: $([math]::Round($size, 2)) MB"
+        } else {
+          Write-Host "❌ Executable not found"
+          exit 1
+        }
+    
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: LazyAF-4.20-Windows
+        path: |
+          dist/LazyAF_4.20.exe
+          run_lazyaf.bat
+        retention-days: 30
+
+  create-release:
+    needs: [test, build]
+    runs-on: windows-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build release executable
+      run: |
+        python build.py
+    
+    - name: Create release package
+      run: |
+        mkdir LazyAF-4.20-Release
+        Copy-Item "dist/LazyAF_4.20.exe" "LazyAF-4.20-Release/"
+        Copy-Item "run_lazyaf.bat" "LazyAF-4.20-Release/"
+        Copy-Item "README.md" "LazyAF-4.20-Release/"
+        Copy-Item "LICENSE" "LazyAF-4.20-Release/" -ErrorAction SilentlyContinue
+        
+        # Create installation instructions
+        @"
+        # LazyAF 4.20 - Installation Instructions
+        
+        ## Quick Start
+        1. Extract all files to a folder
+        2. Double-click ``run_lazyaf.bat`` or ``LazyAF_4.20.exe``
+        3. Start automating!
+        
+        ## Files Included
+        - ``LazyAF_4.20.exe`` - Main application
+        - ``run_lazyaf.bat`` - Convenience launcher
+        - ``README.md`` - Full documentation
+        - ``LICENSE`` - License information
+        
+        ## System Requirements
+        - Windows 10/11 (Windows 7/8 compatible)
+        - No additional software required
+        - 50MB RAM minimum
+        
+        ## Support
+        Visit: https://github.com/yourusername/LazyAF-AutoClicker
+        "@ | Out-File -FilePath "LazyAF-4.20-Release/INSTALL.txt" -Encoding UTF8
+        
+        # Create ZIP package
+        Compress-Archive -Path "LazyAF-4.20-Release/*" -DestinationPath "LazyAF-4.20-Windows.zip"
+    
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./LazyAF-4.20-Windows.zip
+        asset_name: LazyAF-4.20-Windows.zip
+        asset_content_type: application/zip
+    
+    - name: Upload individual executable
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./dist/LazyAF_4.20.exe
+        asset_name: LazyAF_4.20.exe
+        asset_content_type: application/octet-stream
+
+  security-scan:
+    needs: test
+    runs-on: windows-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+    
+    - name: Run Bandit security scan
+      run: |
+        bandit -r . -f json -o bandit-report.json
+      continue-on-error: true
+    
+    - name: Run Safety check
+      run: |
+        safety check --json --output safety-report.json
+      continue-on-error: true
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+        retention-days: 30 
