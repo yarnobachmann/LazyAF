@@ -17,8 +17,8 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/yourusername/LazyAF-AutoClicker.git
-   cd LazyAF-AutoClicker
+   git clone https://github.com/yarnobachmann/LazyAF.git
+   cd LazyAF
    ```
 
 2. **Set Up Virtual Environment**
@@ -47,7 +47,7 @@ We are committed to providing a welcoming and inspiring community for all. Pleas
 ## 📚 Project Structure
 
 ```
-LazyAF-AutoClicker/
+LazyAF/
 ├── auto_clicker.py          # Main application file
 ├── build.py                 # Build script for executable
 ├── requirements.txt         # Python dependencies

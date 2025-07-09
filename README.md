@@ -5,7 +5,7 @@ A **modern, ultra-sleek** auto clicker application with support for both mouse c
 ![Version](https://img.shields.io/badge/version-4.20-brightgreen)
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
 ![License](https://img.shields.io/badge/license-MIT-orange)
-![Build](https://github.com/yourusername/LazyAF-AutoClicker/workflows/Build/badge.svg)
+![Build](https://github.com/yarnobachmann/LazyAF/workflows/Build%20and%20Release/badge.svg)
 
 ## ✨ Features
 
@@ -43,14 +43,14 @@ A **modern, ultra-sleek** auto clicker application with support for both mouse c
 ## 🚀 Quick Start
 
 ### 📦 **Option 1: Download & Run (Recommended)**
-1. Download the latest release from [Releases](https://github.com/yourusername/LazyAF-AutoClicker/releases)
+1. Download the latest release from [Releases](https://github.com/yarnobachmann/LazyAF/releases)
 2. Extract and double-click `LazyAF_4.20.exe`
 3. **No installation required!** ✅
 
 ### 🔨 **Option 2: Build from Source**
 ```bash
-git clone https://github.com/yourusername/LazyAF-AutoClicker.git
-cd LazyAF-AutoClicker
+git clone https://github.com/yarnobachmann/LazyAF.git
+cd LazyAF
 python build.py
 ```
 
@@ -238,10 +238,10 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🔗 Links
 
-- 📖 [Documentation](https://github.com/yourusername/LazyAF-AutoClicker/wiki)
-- 🐛 [Issues](https://github.com/yourusername/LazyAF-AutoClicker/issues)
-- 💬 [Discussions](https://github.com/yourusername/LazyAF-AutoClicker/discussions)
-- 📦 [Releases](https://github.com/yourusername/LazyAF-AutoClicker/releases)
+- 📖 [Documentation](https://github.com/yarnobachmann/LazyAF/wiki)
+- 🐛 [Issues](https://github.com/yarnobachmann/LazyAF/issues)
+- 💬 [Discussions](https://github.com/yarnobachmann/LazyAF/discussions)
+- 📦 [Releases](https://github.com/yarnobachmann/LazyAF/releases)
 
 ---
 
